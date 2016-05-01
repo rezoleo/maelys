@@ -11,7 +11,7 @@ var database = require('../database');
 router.use(function(req,res,next) {
   res.setHeader('Access-Control-Allow-Origin','http://localhost:63342');
   res.setHeader('Access-Control-Allow-Headers','Content-Type');
-  res.setHeader('Access-Control-Allow-Methods','*');
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,PUT,DELETE');
   next();
 });
 /*** DEFINITION DES ROUTES ROOM ***/
@@ -41,7 +41,7 @@ router.post('/room',function(req,res){
   var newRoom = {
     name: req.body.name,
     sw_and_port: req.body.sw_and_port,
-    resident:0
+    resident:'0'
   };
   database.room.addNew(newRoom,function(err,results) {
     res.send(results);
@@ -113,21 +113,28 @@ router.put('/people/:userId/room',function(req,res){
   var userId = req.params.userId;
   var newRoomRequest = req.body.newRoomRequest;
 
+  console.log(newRoomRequest);
   database.room.findOne({name:newRoomRequest},function(err,room){
-    if(!err){
-      if(room.resident === "None"){
+    if(!err && room){
+      console.log('Found room',room);
+      var toSend = {};
+      if(room.resident == '0'){
+        console.log('The room is empty');
         room.resident = userId;
         room.save(function(err){});
         database.people.findOne({_id:userId},function(err,user){
           user.room = room._id;
           user.save(function(err){
-            res.send({concerning:user.username,results :'Change successfully made'});
+            toSend = {concerning:user.username,results :'Change successfully made'};
           });
         });
 
       }
       else
-        res.send({concerning:room.name,results:'Already taken'});
+        toSend= {concerning:room.name,results:'Already taken'};
+
+      console.log(toSend);
+      res.send(toSend);
     }
   });
 });
@@ -197,7 +204,7 @@ router.put('/device/:mac',function(req,res) {
  */
 
 router.get('/loadSearchEngine',function(req,res){
-  database.people.Model.find().populate('devices').exec(function(err,users){
+  database.people.Model.find().populate('devices').populate('room').exec(function(err,users){
     res.send(users);
   });
 });
