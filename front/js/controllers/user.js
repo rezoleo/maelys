@@ -85,7 +85,7 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
     },
     submit: function (eventType) {
       switch (eventType) {
-        case 'valid':
+        case 'submit':
           $http({
             method: 'PUT',
             url: apiHost + '/people/' + userId + '/room',
@@ -95,7 +95,7 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
           });
           // Pas de break ici : normal, on veut exécuter la partie du dessous
         case 'cancel':
-            close_newRoomSection();
+            $scope.changeRoom.close_newRoomSection();
           break;
       }
     }
