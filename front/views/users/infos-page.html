@@ -1,0 +1,78 @@
+<div class="container">
+    <div class="row">
+        <h1>{{infos.user.firstName}} {{infos.user.name|uppercase}}</h1>
+        <div class="col-md-6">
+            <p><b>Identifiants</b> : {{infos.user.username}}</p>
+            <p><b>Adresse Email</b> : {{infos.user.email}}</p>
+            <p><b>Chambre</b> : {{infos.user.room}}</p>
+        </div>
+        <div class="">
+            <h4 class="center-block">Actions</h4>
+            <a href="" id="moveIn_link" class="btn btn-default" ng-click="changeRoom.open_newRoomSection()">Emmenager/Déménager</a>
+            <a href="" id="edit_link" class="btn btn-default"><span class="glyphicon glyphicon-pencil"></span> Modifier les informations</a>
+            <a href="#" class="btn btn-danger"><span class="glyphicon glyphicon-remove-circle"></span> Supprimer l'utilisateur</a>
+        </div><br/>
+    </div>
+
+    <!-- Récapitulatif des différentes machines que l'utilisateur a enregistré sur le réseau.
+        L'Etat PENDING ou ACTIVE y est aussi référencé -->
+    <!-- On y retrouve également le champ pour ajouter une nouvelle MAC -->
+    <!-- PAR DEFAUT : Affiché -->
+    <div id="machines-part">
+        <div class="row padding-15">
+            <h2>Machines</h2>
+            <form id="addDevicesForm"  class="form-inline" ng-submit="addDevice(this)">
+                <div class="form-group">
+                    <label>Ajouter une machine :</label>
+                    <div class="input-group"><span id="address" class="input-group-addon">@</span>
+                        <input ng-model="newDeviceMac" type="text" aria-describedby="address" class="form-control"/>
+                    </div>
+                    <input type="submit" class="btn btn-primary"/>
+                </div>
+            </form>
+        </div>
+        <div class="row bg-info padding-15">Chargement des machines enregistrées...</div>
+        <table id="devicesList" class="table table-stripped">
+            <thead>
+            <tr>
+                <th>Adresse MAC</th>
+                <th>Adresse IP</th>
+                <th>Alias DNS</th>
+                <!-- <th>Date d'ajout</th> -->
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="device in machines.listOfDevices" class="{{ device.active != 'ACTIVE' ? 'bg-warning' : ''}}" >
+                <td>{{device.mac}}</td>
+                <td>{{device.ip}}</td>
+                <td>{{device.dns}}</td>
+                <td class="text-left" ng-show="device.active == 'ACTIVE'"><a href="#" class="btn btn-danger">Supprimer</a></td>
+                <td class="text-left" ng-show="device.active != 'ACTIVE'"><a href="#" class="btn btn-success">Ajouter</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- Section de modification des informations -->
+    <!-- PAR DEFAUT : Caché -->
+
+    <!-- Sectoin de changement de chambre -->
+    <!-- PAR DEFAUT : Caché -->
+    <div id="changeRoom-part" class="row padding-15 away">
+        <h2>Emmenager/Déménager dans une nouvelle chambre</h2>
+        <form id="newRoomForm" class="form-horizontal" ng-submit="submit('valid')" >
+            <div class="form-group">
+                <label for="room" class="control-label col-sm-3">Entrer la nouvelle chambre</label>
+                <div class="col-sm-9">
+                    <input type="text" ng-model="changeRoom.newRoom" class="form-control" />
+                </div>
+            </div>
+            <div class="text-right">
+                <button class="btn" type="submit">Valider</button>
+                <button class="btn btn-danger" ng-click="changeRoom('cancel')">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+<div class="container">
+    <h1 class="text-center"><b>Page d'accueil du service Maelys</b></h1>
+    <div class="row">
+        <h3>Rechercher un utilisateur</h3>
+        <form class="form-horizontal">
+            <label class="">Entrer une information à rechercher (Nom, Prénom, Chambre, Adresse MAC, Adresse IP)</label>
+            <div class="form-group">
+
+                <div class="input-group">
+                    <span class="input-group-addon" id="search"><span class="glyphicon glyphicon-menu-right"></span> </span>
+                    <input ng-change="refreshListDisplay()" ng-model="searchThis" id="search-engine" class="form-control" aria-describedby="search" type="text" placeholder="Recherche..." />
+                </div>
+
+            </div>
+        </form>
+    </div>
+    <div class="row" id="pending-message">
+        <p class="bg-warning padding-15">Recherche en cours...</p>
+    </div>
+    <div class="row">
+        <table id="results-table" class="hidden table table-striped">
+            <thead>
+            <tr>
+                <th>Prénom</th>
+                <th>Nom</th>
+                <th>Chambre</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="entry in searchResults|filter:searchThis">
+                    <td>{{entry.name}}</td>
+                    <td>{{entry.firstName}}</td>
+                    <td>{{entry.room}}</td>
+                    <td><a href="#/users/infos/{{entry._id}}" class="btn btn-default">Plus d'informations</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
