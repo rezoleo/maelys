@@ -74,7 +74,7 @@ router.get('/people',function(req,res) {
 
 router.get('/people/:id',function(req,res) {
   var chosenUser = database.people.Model.findOne({_id:req.params.id});
-  ignoreMatching(chosenUser,'name','room','room','No room').populate('devices').exec(function (err, results){
+  ignoreMatching(chosenUser,'name -_id','room','room','No room').populate('devices').exec(function (err, results){
     if(err)
       res.send(err.message);
     else
@@ -121,18 +121,67 @@ router.put('/people/:userId/room',function(req,res){
 
   console.log(newRoomRequest);
   database.room.findOne({name:newRoomRequest},function(err,room){
+    // On ne se place que dans le cas où on trouve réellement une chambre
+    if(!err && room) {
+      console.log('Found room', room);
+      var toSend = {};
+
+      if (room.resident == '0') {
+        // PREMIER CAS : La chambre est vide
+        // Pas de souci, on peut déplacer directement la personne
+        console.log('The room is empty');
+        room.resident = userId;
+        room.save(function (err) {
+        });
+        database.people.findOne({_id: userId}, function (err, user) {
+          user.room = room._id;
+          user.save(function (err) {
+          });
+        });
+        toSend = {concerning: newRoomRequest, results: 'Change successfully made'};
+      }
+      else if (room) {
+        // DEUXIEME CAS : La chambre est déjà occupé
+        // On demande confirmation en demandant le forcing du changement de chambre
+        console.log('The room was taken. Use the forcing option to force moving into the room');
+        toSend = {
+          concerning: room.name,
+          results: 'The room was taken. Use the forcing option to force moving into the room'
+        };
+      }
+    }
+    else
+        // La chambre n'existe pas ...
+        toSend = {concerning:room.name,results:'The room does not exist.'};
+
+      console.log(toSend);
+      res.send(toSend);
+    }
+  });
+});
+
+router.put('/people/:userId/room/force',function(req,res){
+  /*
+    On force le changement de chambre, cela veut dire que si quelqu'un était déjà enregistré, il est remplacé.
+    Remplacer qqun signifie que :
+      .Son indicateur de chambre est replacé à 'No room'
+      .L'indicateur de resident de la chambre est changé en userId
+      .L'indicateur de chambre de l'utilisateur userId est passé à room._id
+   */
+  var userId = req.params.userId;
+  var newRoomRequest = req.body.newRoomRequest;
+
+  database.room.findOne({name:newRoomRequest},function(err,room){
+    // On checke toujours si la chambre demandé existe
     if(!err && room){
       console.log('Found room',room);
       var toSend = {};
       if(room.resident == '0'){
+        // La chmabre est vide
+        // Le mécanisme de forcing est inutile mais on change tout de même l'utilisateur de chambre.
         console.log('The room is empty');
-        room.resident = userId;
-        room.save(function(err){});
-        database.people.findOne({_id:userId},function(err,user){
-          user.room = room._id;
-          user.save(function(err){} );
-        });
-        toSend = {concerning:user.username,results :'Change successfully made'};
+        changeRoom(room)
+        toSend = {concerning:newRoomRequest,results :'Change successfully made'};
       }
       else if(room){
         console.log('The room was taken. Still moved in.');
@@ -220,7 +269,7 @@ router.get('/loadSearchEngine',function(req,res){
   // ATTENTION : Lorsqu'il ne trouve pas la chambre, il assigne null à room.
   // Cela nécessite un post-traitement sur le front-end
    var listOfUsers = database.people.Model.find();
-   ignoreMatching(listOfUsers,'name','room','room','No room').populate('devices').exec(function(err,users){
+   ignoreMatching(listOfUsers,'name -_id','room','room','No room').populate('devices').exec(function(err,users){
       if(err)
           res.send(err.message);
       else
@@ -239,5 +288,14 @@ function ignoreMatching(currentQuery, select, path, model, match) {
     match: {_id : {$not: new RegExp('/' + match + '/')}},
     select:select,
     default: match
+  });
+}
+
+function changeRoom(requestingUser,requestedRoom) {
+  room.resident = userId;
+  room.save(function(err){});
+  database.people.findOne({_id:userId},function(err,user){
+    user.room = room._id;
+    user.save(function(err){} );
   });
 }
