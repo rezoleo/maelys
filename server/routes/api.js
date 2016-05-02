@@ -146,7 +146,8 @@ router.put('/people/:userId/room',function(req,res){
         console.log('The room was taken. Use the forcing option to force moving into the room');
         toSend = {
           concerning: room.name,
-          results: 'The room was taken. Use the forcing option to force moving into the room'
+          results: 'The room was taken. Use the forcing option to force moving into the room',
+          requestedAction:'NEW-ROOM-NEED-FORCING'
         };
       }
     }
@@ -156,7 +157,6 @@ router.put('/people/:userId/room',function(req,res){
 
       console.log(toSend);
       res.send(toSend);
-    }
   });
 });
 
@@ -167,6 +167,10 @@ router.put('/people/:userId/room/force',function(req,res){
       .Son indicateur de chambre est replacé à 'No room'
       .L'indicateur de resident de la chambre est changé en userId
       .L'indicateur de chambre de l'utilisateur userId est passé à room._id
+
+    Avantage : un utilisateur qui n'est plus présent à la Rez n'est tout de même pas supprimé. Il lui sera alors possible de revenir
+    plus tard et d'être déjà enregistré.
+    On pensera à vider régulièrement la liste des personnes sans chambres.
    */
   var userId = req.params.userId;
   var newRoomRequest = req.body.newRoomRequest;
@@ -180,18 +184,12 @@ router.put('/people/:userId/room/force',function(req,res){
         // La chmabre est vide
         // Le mécanisme de forcing est inutile mais on change tout de même l'utilisateur de chambre.
         console.log('The room is empty');
-        changeRoom(room)
+        changeRoom(userId,room);
         toSend = {concerning:newRoomRequest,results :'Change successfully made'};
       }
-      else if(room){
+      else {
         console.log('The room was taken. Still moved in.');
-        room.resident = userId;
-        room.save(function(err){});
-        database.people.findOne({_id:userId},function(err,user){
-          user.room = room._id;
-
-          user.save(function(err){});
-        });
+        changeRoom(userId,room,room.resident);
         toSend = {concerning:room.name,results:'The room was already  taken, but the resident was replaced'};
       }
 
@@ -291,11 +289,29 @@ function ignoreMatching(currentQuery, select, path, model, match) {
   });
 }
 
-function changeRoom(requestingUser,requestedRoom) {
-  room.resident = userId;
-  room.save(function(err){});
-  database.people.findOne({_id:userId},function(err,user){
-    user.room = room._id;
+function changeRoom(requestingUserId,requestedRoom, userToReset) {
+  database.people.findOne({_id:requestingUserId},function(err,user){
+    if(err || !user) {
+      console.log("Aucun utilisateur n'a été trouvé ou une erreur est survenue. Le déplacememnt est annulé.");
+      return;
+    }
+
+    // Attribution du résident
+    requestedRoom.resident = requestingUserId;
+    requestedRoom.save(function (err) {});
+
+    // Attribution de la chambre
+    user.room = requestedRoom._id;
     user.save(function(err){} );
+
+    // On sait que userToReset est forcement bon : il correspond à un id d'utilisateur préceddement enregistré
+    // On peut donc faire la recherche sans problème, on est sûr de trouver un résultat (dans le cas où l'id est précisé).
+    if(userToReset){
+      database.people.findOne({_id:userToReset},function(err,toReset){
+        toReset.room = 'No room';
+        toReset.save(function(err){});
+      });
+    }
+
   });
 }
