@@ -73,15 +73,23 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
 
   $scope.changeRoom = {
     newRoom: "Not set",
+    needForcing: false,
     open_newRoomSection: function () {
-      $("#machines-part").fadeOut(600, function () {
-        $("#changeRoom-part").fadeIn(600);
+      $("#machines-part").fadeOut(200, function () {
+        $("#changeRoom-part").fadeIn(200);
       });
     },
     close_newRoomSection: function() {
-      $("#changeRoom-part").fadeOut(600,function(){
-        $("#machines-part").fadeIn(600);
+      $("#changeRoom-part").fadeOut(200,function(){
+        $("#machines-part").fadeIn(200);
       });
+    },
+    open_forcingSection: function() {
+      $("#changeRoom-part #forcing-message").html("La chambre " + $scope.changeRoom.newRoom + " est déjà occupée. Voulez-vous quand même continuer ?");
+      $("#changeRoom-part #forcing-message").fadeIn(200);
+    },
+    close_forcingSection: function() {
+      $("#changeRoom-part #forcing-message").fadeOut(200);
     },
     submit: function (eventType) {
       switch (eventType) {
@@ -92,10 +100,26 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
             data: {
               newRoomRequest: $scope.changeRoom.newRoom
             }
+          }).then(function (response) {
+            var data = response.data;
+            if(data.requestedAction == 'NEED-FORCING-ACTION') {
+              $scope.changeRoom.open_forcingSection();
+            }
+
           });
           // Pas de break ici : normal, on veut exécuter la partie du dessous
         case 'cancel':
             $scope.changeRoom.close_newRoomSection();
+          break;
+        case 'force-submit':
+          $http({
+            method: 'PUT',
+            url: apiHost + '/people/' + userId + '/room/force',
+            data: {
+              newRoomRequest: $scope.changeRoom.newRoom
+            }
+          });
+        case 'force-cancel':
           break;
       }
     }

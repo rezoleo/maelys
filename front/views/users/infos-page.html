@@ -61,6 +61,11 @@
     <!-- Sectoin de changement de chambre -->
     <!-- PAR DEFAUT : Caché -->
     <div id="changeRoom-part" class="row padding-15 away">
+        <div id="forcing-message" class="away">
+            La chambre {{changeRoom.newRoom}} est déjà occupée. Voulez-vous quand même continuer ?
+            <button class="btn btn-success" ng-click="changeRoom.submit('force-valid')">Continuer</button>
+            <button class="btn btn-danger" ng-click="changeRoom.submit('force-cancel')">Annuler</button>
+        </div>
         <h2>Emmenager/Déménager dans une nouvelle chambre</h2>
         <form id="newRoomForm" class="form-horizontal" ng-submit="submit('valid')" >
             <div class="form-group">
