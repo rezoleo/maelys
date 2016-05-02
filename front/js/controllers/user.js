@@ -85,7 +85,7 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
       });
     },
     open_forcingSection: function() {
-      $("#changeRoom-part #forcing-message").html("La chambre " + $scope.changeRoom.newRoom + " est déjà occupée. Voulez-vous quand même continuer ?");
+      $("#changeRoom-part #forcing-message #text").html("La chambre " + $scope.changeRoom.newRoom + " est déjà occupée. Voulez-vous quand même continuer ?");
       $("#changeRoom-part #forcing-message").fadeIn(200);
     },
     close_forcingSection: function() {
@@ -102,22 +102,26 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
             }
           }).then(function (response) {
             var data = response.data;
-            if(data.requestedAction == 'NEED-FORCING-ACTION') {
+            console.log(data);
+            if(data.requestedAction == 'NEW-ROOM-NEED-FORCING') {
+
               $scope.changeRoom.open_forcingSection();
             }
 
           });
-          // Pas de break ici : normal, on veut exécuter la partie du dessous
+          break;
         case 'cancel':
             $scope.changeRoom.close_newRoomSection();
           break;
-        case 'force-submit':
+        case 'force-valid':
           $http({
             method: 'PUT',
             url: apiHost + '/people/' + userId + '/room/force',
             data: {
               newRoomRequest: $scope.changeRoom.newRoom
             }
+          }).then(function(response){
+            console.log(response.data);
           });
         case 'force-cancel':
           break;
