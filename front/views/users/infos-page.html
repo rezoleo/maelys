@@ -4,7 +4,7 @@
         <div class="col-md-6">
             <p><b>Identifiants</b> : {{infos.user.username}}</p>
             <p><b>Adresse Email</b> : {{infos.user.email}}</p>
-            <p><b>Chambre</b> : {{infos.user.room}}</p>
+            <p><b>Chambre</b> : {{infos.user.room.name}}</p>
         </div>
         <div class="">
             <h4 class="center-block">Actions</h4>
@@ -21,7 +21,7 @@
     <div id="machines-part">
         <div class="row padding-15">
             <h2>Machines</h2>
-            <form id="addDevicesForm"  class="form-inline" ng-submit="addDevice(this)">
+            <form id="addDevicesForm"  class="form-inline" ng-submit="machines.addDevice(this)">
                 <div class="form-group">
                     <label>Ajouter une machine :</label>
                     <div class="input-group"><span id="address" class="input-group-addon">@</span>
@@ -66,12 +66,12 @@
             <div class="form-group">
                 <label for="room" class="control-label col-sm-3">Entrer la nouvelle chambre</label>
                 <div class="col-sm-9">
-                    <input type="text" ng-model="changeRoom.newRoom" class="form-control" />
+                    <input id="room" type="text" ng-model="changeRoom.newRoom" class="form-control" />
                 </div>
             </div>
             <div class="text-right">
-                <button class="btn" type="submit">Valider</button>
-                <button class="btn btn-danger" ng-click="changeRoom('cancel')">Annuler</button>
+                <button class="btn" type="submit" ng-click="changeRoom.submit('submit')">Valider</button>
+                <button class="btn btn-danger" ng-click="changeRoom.submit('cancel')">Annuler</button>
             </div>
         </form>
     </div>
