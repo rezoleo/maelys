@@ -124,14 +124,20 @@ router.put('/people/:userId/room',function(req,res){
         room.save(function(err){});
         database.people.findOne({_id:userId},function(err,user){
           user.room = room._id;
-          user.save(function(err){
-            toSend = {concerning:user.username,results :'Change successfully made'};
-          });
+          user.save(function(err){} );
         });
-
+        toSend = {concerning:user.username,results :'Change successfully made'};
       }
-      else
-        toSend= {concerning:room.name,results:'Already taken'};
+      else if(room){
+        console.log('The room was taken. Still moved in.');
+        room.resident = userId;
+        room.save(function(err){});
+        database.people.findOne({_id:userId},function(err,user){
+          user.room = room._id;
+          user.save(function(err){});
+        });
+        toSend = {concerning:room.name,results:'The room was already  taken, but the resident was replaced'};
+      }
 
       console.log(toSend);
       res.send(toSend);
@@ -204,7 +210,7 @@ router.put('/device/:mac',function(req,res) {
  */
 
 router.get('/loadSearchEngine',function(req,res){
-  database.people.Model.find().populate('devices').populate('room').exec(function(err,users){
+  database.people.Model.find().populate('device').populate('room').exec(function(err,users){
     res.send(users);
   });
 });
