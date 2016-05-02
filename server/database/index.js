@@ -15,7 +15,7 @@ var peopleSchema = new Schema({
   name: String,
   firstName: String,
   email: String,
-  room: {type: String, ref:'room'},
+  room: String,
   devices : [{type: String, ref:'device'}]
 });
 

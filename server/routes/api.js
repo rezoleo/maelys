@@ -8,6 +8,7 @@ var router = express.Router();
 
 var database = require('../database');
 
+
 router.use(function(req,res,next) {
   res.setHeader('Access-Control-Allow-Origin','http://localhost:63342');
   res.setHeader('Access-Control-Allow-Headers','Content-Type');
@@ -72,8 +73,13 @@ router.get('/people',function(req,res) {
 });
 
 router.get('/people/:id',function(req,res) {
-  database.people.findOne({_id:req.params.id}).populate('room').populate('devices').exec(function (err, results){
-    res.send(results);
+  var chosenUser = database.people.Model.findOne({_id:req.params.id});
+  ignoreMatching(chosenUser,'name','room','room','No room').populate('devices').exec(function (err, results){
+    if(err)
+      res.send(err.message);
+    else
+      res.send(results);
+
   });
 });
 
@@ -134,6 +140,7 @@ router.put('/people/:userId/room',function(req,res){
         room.save(function(err){});
         database.people.findOne({_id:userId},function(err,user){
           user.room = room._id;
+
           user.save(function(err){});
         });
         toSend = {concerning:room.name,results:'The room was already  taken, but the resident was replaced'};
@@ -210,10 +217,27 @@ router.put('/device/:mac',function(req,res) {
  */
 
 router.get('/loadSearchEngine',function(req,res){
-  database.people.Model.find().populate('device').populate('room').exec(function(err,users){
-    res.send(users);
-  });
+  // ATTENTION : Lorsqu'il ne trouve pas la chambre, il assigne null à room.
+  // Cela nécessite un post-traitement sur le front-end
+   var listOfUsers = database.people.Model.find();
+   ignoreMatching(listOfUsers,'name','room','room','No room').populate('devices').exec(function(err,users){
+      if(err)
+          res.send(err.message);
+      else
+        res.send(users);
+   });
 });
 
 
 module.exports = router;
+
+// *** Helper functions
+function ignoreMatching(currentQuery, select, path, model, match) {
+  return currentQuery.populate({
+    path: path,
+    model: model,
+    match: {_id : {$not: new RegExp('/' + match + '/')}},
+    select:select,
+    default: match
+  });
+}
