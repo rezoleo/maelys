@@ -72,7 +72,7 @@ router.get('/people',function(req,res) {
 });
 
 router.get('/people/:id',function(req,res) {
-  database.people.findOne({_id:req.params.id},function (err, results){
+  database.people.findOne({_id:req.params.id}).populate('room').populate('devices').exec(function (err, results){
     res.send(results);
   });
 });
