@@ -6,7 +6,7 @@ var maelysControllers = angular.module('Maelys-Control');
 var apiHost = 'http://localhost:3000/api';
 
 // @infos :  Controller pour la page d'infos
-maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', function($scope,$http,$routeParams){
+maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams','$route', function($scope,$http,$routeParams,$route){
   var userId =$routeParams.userId;
   /**
    * PREMIERE PARTIE : DEFINITION DES DIFFERENTES STRUCTURES
@@ -74,23 +74,10 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
   $scope.changeRoom = {
     newRoom: "Not set",
     needForcing: false,
-    open_newRoomSection: function () {
-      $("#machines-part").fadeOut(200, function () {
-        $("#changeRoom-part").fadeIn(200);
-      });
-    },
-    close_newRoomSection: function() {
-      $("#changeRoom-part").fadeOut(200,function(){
-        $("#machines-part").fadeIn(200);
-      });
-    },
-    open_forcingSection: function() {
-      $("#changeRoom-part #forcing-message #text").html("La chambre " + $scope.changeRoom.newRoom + " est déjà occupée. Voulez-vous quand même continuer ?");
-      $("#changeRoom-part #forcing-message").fadeIn(200);
-    },
-    close_forcingSection: function() {
-      $("#changeRoom-part #forcing-message").fadeOut(200);
-    },
+    open_newRoomSection: openChangeRoom,
+    close_newRoomSection: closeChangeRoom,
+    open_forcingSection: openForcingSection,
+    close_forcingSection: closeForcingSection,
     submit: function (eventType) {
       switch (eventType) {
         case 'submit':
@@ -103,11 +90,10 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
           }).then(function (response) {
             var data = response.data;
             console.log(data);
-            if(data.requestedAction == 'NEW-ROOM-NEED-FORCING') {
-
-              $scope.changeRoom.open_forcingSection();
-            }
-
+            if(data.requestedAction == 'NEW-ROOM-NEED-FORCING')
+              $scope.changeRoom.open_forcingSection($scope.changeRoom.newRoom);
+            else
+              $route.reload();
           });
           break;
         case 'cancel':
@@ -121,9 +107,10 @@ maelysControllers.controller('InfosCtrl',['$scope','$http','$routeParams', funct
               newRoomRequest: $scope.changeRoom.newRoom
             }
           }).then(function(response){
-            console.log(response.data);
+              $route.reload();
           });
         case 'force-cancel':
+            $scope.changeRoom.close_newRoomSection();
           break;
       }
     }
@@ -168,3 +155,22 @@ maelysControllers.controller('AddUserCtrl',['$scope', '$http', '$route', functio
     })
   }
 }]);
+
+function openChangeRoom() {
+  $("#machines-part").fadeOut(200, function () {
+    $("#changeRoom-part").fadeIn(200);
+  });
+}
+function closeChangeRoom() {
+  $("#changeRoom-part").fadeOut(200,function(){
+    $("#machines-part").fadeIn(200);
+  });
+}
+function openForcingSection(newRoom) {
+  $("#changeRoom-part #forcing-message #text").html("La chambre " + newRoom + " est déjà occupée. Voulez-vous quand même continuer ?");
+  $("#changeRoom-part #forcing-message").fadeIn(200);
+}
+
+function closeForcingSection() {
+  $("#changeRoom-part #forcing-message").fadeOut(200);
+}
