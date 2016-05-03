@@ -170,7 +170,7 @@ router.put('/people/:userId/room/force',function(req,res){
 
     Avantage : un utilisateur qui n'est plus présent à la Rez n'est tout de même pas supprimé. Il lui sera alors possible de revenir
     plus tard et d'être déjà enregistré.
-    On pensera à vider régulièrement la liste des personnes sans chambres.
+    On pensera à vider régulièrement la liste des personnes sans chambre.
    */
   var userId = req.params.userId;
   var newRoomRequest = req.body.newRoomRequest;
@@ -290,19 +290,29 @@ function ignoreMatching(currentQuery, select, path, model, match) {
 }
 
 function changeRoom(requestingUserId,requestedRoom, userToReset) {
+  console.log("Change room");
   database.people.findOne({_id:requestingUserId},function(err,user){
     if(err || !user) {
       console.log("Aucun utilisateur n'a été trouvé ou une erreur est survenue. Le déplacememnt est annulé.");
       return;
     }
 
+    if(requestedRoom.resident == requestingUserId) {
+      console.log("L'utiisateur se trouve déjà dans la chambre. Changement de chmabre annulé.");
+    }
     // Attribution du résident
     requestedRoom.resident = requestingUserId;
     requestedRoom.save(function (err) {});
 
     // Attribution de la chambre
+    console.log(requestedRoom._id);
     user.room = requestedRoom._id;
-    user.save(function(err){} );
+    user.save(function(err){
+      if(err)
+          console.log(err);
+      else
+          console.log("Nouveau user : ",user);
+    } );
 
     // On sait que userToReset est forcement bon : il correspond à un id d'utilisateur préceddement enregistré
     // On peut donc faire la recherche sans problème, on est sûr de trouver un résultat (dans le cas où l'id est précisé).

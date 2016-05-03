@@ -3,7 +3,7 @@
  */
 
 // Dépendences
-var mongoose = require('mongoose');
+var mongoose = require('mongoose').set('debug',true);
   mongoose.connect('mongodb://localhost/database');
 var Schema = mongoose.Schema;
 var ctrl_base = require('./controllers/database-controller');
@@ -15,7 +15,7 @@ var peopleSchema = new Schema({
   name: String,
   firstName: String,
   email: String,
-  room: String,
+  room: {type:String, ref:'room'},
   devices : [{type: String, ref:'device'}]
 });
 
